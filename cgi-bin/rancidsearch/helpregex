@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+# Rancid Search
+# Made by Charles Henri Turpin and Pierre Mavro
+# Licence GPLv2
+
+print "Content-type: text/html\n\n";
+print"<html><head><title>Help about regular expressions</title></head><body>";
+
+print"<h2 align=\"center\">Help about regular expressions</h2>";
+
+print <<"SORTIE";
+<br /><br /><br />
+Regular expression permit you, using symbols to ask for specific things to search in a document without writting a whole word for example.<br />
+You'll find here the descritpion of a few of these symbols and some regular expression rules. (we will use // to limit the regex but you will not have to in your search).<br /><br />
+
+First of all, you have to know that Regular expression are cas-sensitive, so be careful.<br /><br />
+
+- '^' symbol ask for the beginning of the line. It can only be written at the beginning of the regex.<br />
+For example, /^hello/ will search for a sentence beginning with hello. It will match "hello world" but NOT "world hello".<br /><br />
+
+- '\$' symbol ask for the end of the line. It can only be written at the end of the regex.<br /><br />
+
+- '.' means "any character".<br /><br />
+
+- '\\d' means a number from 0 to 9. At the opposite, '\\D' means a non-number character.<br /><br />
+
+- '\\w' means a word character including '_' and '-'. At the opposite, '\\W' means a non-word character.<br /><br />
+
+- '\\s' means a whitespace character although ' ' works fine too. At the opposite, '\\S' means a non-whitespace character.<br /><br />
+
+- Next to a symbol, '*' means "0 or more times" for example /.*/ Will match ANYTHING (. -> any character * -> 0 or more time).<br /><br />
+
+- Next to a symbol, '+' means "1 or more times". Same rule as *.<br /><br />
+
+- Next to a symbol, '?' means "0 or 1 time".<br /><br />
+
+- '|' means "or", for example /^(hello|world)/ will match both "hello world" and "world hello" (^ -> starting with (hello|world) -> hello OR world).<br /><br /><br />
+
+Please be careful, a lot of metacharacters have a meaning in regex, for example [], {} % etc. So if you want to match these, please escape them using '\' or use the '.' symbol.<br /><br />
+
+Here is a link to a great website about regex:  <a href="http://www.sdsc.edu/~moreland/courses/IntroPerl/docs/manual/pod/perlre.html" onclick="window.open('http://www.sdsc.edu/~moreland/courses/IntroPerl/docs/manual/pod/perlre.html', 'exemple', 'height=600, width=800, top=90, left=350, toolbar=no, menubar=no, location=yes, resizable=yes, scrollbars=yes, status=no');">Regex Website</a>
+SORTIE
+
+print"</body></html>";

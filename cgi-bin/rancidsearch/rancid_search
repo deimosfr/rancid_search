@@ -1,0 +1,387 @@
+#!/usr/bin/perl
+# Rancid Search v0.1
+# Made by Charles Henri Turpin and Pierre Mavro
+# Licence GPLv2
+
+# Load libs
+use File::Glob;
+
+# Change vars
+my $path="/var/lib/rancid";
+my $full_path="$path/*/configs";
+
+################### DO NOT CHANGE NOW ###################
+
+# Function to delete duplicated lines
+sub Array_uniq
+{
+	my @List = @_;
+	my %FutureList;
+	foreach(@List)
+	{
+		$FutureList{$_} = 1; 
+	}
+	return (keys(%FutureList));
+}
+
+# Read entry
+read(STDIN, $in, $ENV{CONTENT_LENGTH});
+
+# Declaration
+my $regex;
+my $isreg;
+my $sensitive;
+my $uniq;
+my $summary;
+my $frame;
+
+# Check what has been requested
+# Sensitive and uniq checkbox
+if(($ENV{QUERY_STRING} eq "jira") or ($ENV{QUERY_STRING} eq "rancid") or ( $ENV{QUERY_STRING} eq "confluence") or ( $ENV{QUERY_STRING} eq "syslog"))
+{
+	$frame=$ENV{QUERY_STRING};
+}
+if(($in =~ /search=(.*)?(&uniq)/) or ($in =~ /search=(.*)?(&sensitive)/))
+{
+	$regex=$1;
+}
+# Searchbox
+elsif ($in =~ /search=(.*)/)
+{
+	$regex=$1;
+}
+# Sensitive checkbox
+if($in =~ /&sensitive=(.*)/)
+{
+	$sensitive="yes";
+}
+# Uniq checkbox
+if($in =~ /&uniq=(.*)/)
+{
+	$uniq="no";
+}
+# Empty searchbox field
+if($regex eq "")
+{
+	$isreg="Thisisnotatrueregex";
+}
+my @results;
+my @location;
+my $foundtotal=0;
+my $found=0;
+my @listfile=glob("$full_path/*");
+
+
+# Change regex to avoid coding metachars
+$regex =~ s/%5C/\\/g;
+$regex =~ s/%5B/[/g;
+$regex =~ s/%5D/]/g;
+$regex =~ s/\+/ /g;
+$regex =~ s/%7B/{/g;
+$regex =~ s/%7D/}/g;
+$regex =~ s/%2B/\+/g;
+$regex =~ s/%22/"/g;
+$regex =~ s/%27/'/g;
+$regex =~ s/%21/!/g;
+$regex =~ s/%3F/?/g;
+$regex =~ s/%3B/;/g;
+$regex =~ s/%3A/:/g;
+$regex =~ s/%2F/\//g;
+$regex =~ s/%2C/,/g;
+$regex =~ s/%5E/^/g;
+$regex =~ s/%24/\$/g;
+$regex =~ s/%25/%/g;
+$regex =~ s/%A7/§/g;
+$regex =~ s/%3D/=/g;
+$regex =~ s/%40/@/g;
+$regex =~ s/%23/#/g;
+$regex =~ s/%3C/</g;
+$regex =~ s/%3E/>/g;
+$regex =~ s/%7C/|/g;
+
+# HTML headers
+print("Content-Type: text/html\n\n");
+print <<"HEREDOC";
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+	<title>Rancid Search</title>
+
+	<!-- Load JQuery libs -->
+	<script type=\"text/javascript\" src=\"/rancidsearch/jquery/jquery-1.4.4.js\"></script>
+	<script type=\"text/javascript\" src=\"/rancidsearch/jquery/jquery.jlabel-1.2.min.js\"></script>
+	
+	<!-- JQuery scripts for search field and clear button -->
+		<script type="text/javascript">
+			\$().ready(function() {
+				\$('[id^=rancidsearch]:text').jLabel();
+			});
+		</script>
+	<script type="text/javascript">
+	\$(document).ready(function() {
+		\$('input.deletable').wrap('<span class=\"deleteicon\" />').after(\$('<span/>').click(function() {
+		\$(this).prev('input').val('').focus();
+		}));
+	});
+	</script>
+	
+	<!-- CSS -->
+	<style>
+		span.deleteicon {
+			position: relative;
+		}
+		span.deleteicon span {
+			position: absolute;
+			display: block;
+			top: 1px;
+			right: 3px;
+			width: 18px;
+			height: 18px;
+			background: url('/rancidsearch/img/clear.png');
+			cursor: pointer;
+		}
+		span.deleteicon input {
+			border: 2px solid #8FC427;
+			padding: 3px;
+			width: 96%;
+			font-size: 1em;
+			color: #462d06;
+		}
+		a img{
+			border:0px solid #FFF;
+		}
+		
+		#menu
+		{
+			background-color: #EAF2D3;
+			width: auto;
+			border: 2px solid #98bf21;
+		}
+		a:active
+		{
+			text-decoration: none;
+			color: #8FC427;
+		}
+		a:link
+		{
+			text-decoration: none;
+			color: #1560BD;;
+		}
+		a:visited
+		{
+			text-decoration: none;
+			color: #1560BD;
+		}
+		a:hover
+		{
+			text-decoration: none;
+			color: black;
+		}
+		
+		body
+		{
+			font-family: Arial;
+			background-color: white;
+			white-space:nowrap; 
+		}
+		
+		.css3button
+		{
+			background: #222;
+			display: inline-block;
+			padding: 5px 10px 6px;
+			color: #fff;
+			text-decoration: none;
+			font-weight: bold;
+			line-height: 1;
+			-moz-border-radius: 5px;
+			-webkit-border-radius: 5px;
+			-moz-box-shadow: 0 1px 3px #999;
+			-webkit-box-shadow: 0 1px 3px #999;
+			text-shadow: 0 -1px 1px #222;
+			border-bottom: 1px solid #222;
+			position: relative;
+			cursor: pointer;
+			height: 30px;
+			width: 120px;
+		}
+		
+		.linkbutton
+		{
+			background: url(background.gif) bottom repeat-x #9eabb3;
+			padding: 5px 10px 5px 10px;
+			text-align: center;
+			font-weight: bold;
+			color: #fff;
+			text-decoration: none; border: 1px inset #aaa;
+			-webkit-border-radius: 8px; width: auto; -moz-border-radius: 8px;  -khtml-border-radius: 8px;  border-radius: 8px;
+			-moz-box-shadow: 1px 1px 1px #666;  -webkit-box-shadow: 1px 1px 1px #666;  box-shadow: 1px 1px 1px #666;
+			text-shadow: rgba(0,0,0, .5) 0px -1px 0px;
+			border-top: inset 1px #ccc; border-left: inset 1px #ccc; border-bottom: solid 1px solid #000; border-right: 1px solid #666;
+		}
+		
+		.red
+		{
+			color: red;
+		}
+	}
+	</style>
+	</head>
+
+<body>
+<!-- Help -->
+    <a name="top"></a><a style=\"float: right\" onclick=\"window.open('helpregex', 'exemple', 'height=600, width=800, top=90, left=350, toolbar=yes, menubar=yes, location=yes, resizable=yes, scrollbars=yes, status=yes')\"><img src=\"/rancidsearch/img/question.png\" alt=\"Questions\" title=\"How to use regular expressions\" /></a>
+
+<center>
+<!-- Search form -->
+<form action=\"rancid_search\" method=\"POST\">
+	<p align='center'><img src=\"/rancidsearch/img/rancidsearch_logo.png\" alt=\"logo\" /><font size='12'><b>Rancid Search</b></font><br />
+	<img src='/rancidsearch/img/grad_mid.png' alt=\"gradiant\" /></p>
+	<table width=\"100%\" border=0>
+	<label for=\"rancidsearch\">Search</label>
+	<tr><td width=\"20%\"></td>
+	<td align=\"right\"><input class=\"linkbutton\" type=\"submit\" value=\"Search\" style=\"background: #000000\" /></td><td width=\"33%\" align=\"center\"><INPUT TYPE=\"text\" NAME=\"search\" VALUE=\"$regex\" id=\"rancidsearch\" class=\"deletable\" /></td>
+	<script language="javascript">
+		document.getElementById('rancidsearch').focus();
+	</script>
+HEREDOC
+
+#To be able to remember the state of the checkboxes
+if(defined($uniq))
+{
+	print "<td><INPUT TYPE=\"checkbox\" VALUE=\"uniq\" NAME=\"uniq\" CHECKED/>  Display duplicated lines<br />"
+}
+else
+{
+	print "<td><INPUT TYPE=\"checkbox\" VALUE=\"uniq\" NAME=\"uniq\" />  Display duplicated lines<br />"
+}
+if(defined($sensitive))
+{
+	print "<INPUT TYPE=\"checkbox\" VALUE=\"sensitive\" NAME=\"sensitive\" CHECKED/>  Case Sensitive</td></tr>"
+}
+else
+{
+	print "<INPUT TYPE=\"checkbox\" VALUE=\"sensitive\" NAME=\"sensitive\" />  Case Sensitive</td></tr>"
+}
+
+print <<"HEREDOC";
+	<tr><td />
+</table>
+</FORM>
+</center>
+<img src=\"/rancidsearch/img/greenpixel.png\" alt=\"separate\" title=\"Separate\" width=\"100%\" height=\"1px\"/>
+<div id=\"maingroup\">
+<table id=\"sum\"><tr><td>
+<b><a name=\"menu\">Summary</a><br /><img src=\"/rancidsearch/img/grad_l2r.png\" alt=\"separate\" title=\"Separate\" /></b>
+</td></tr>
+</table>
+<table id=\"menu\">
+</table>
+
+HEREDOC
+
+if(!($isreg eq "Thisisnotatrueregex"))
+{
+	print "<table border=0>\n";
+	foreach my $file (@listfile)
+	{
+		my $loc=$file;
+		my @founded;
+		if($loc =~ /$path\/(.*?)\/configs\/(.*)/)
+		{
+			$loc="$1 - $2";
+		}
+		$found=0;
+		if (!open(FILE, "<$file"))
+		{
+			print "Can't open file: $!";
+		}
+		while(<FILE>)
+		{
+			chomp($_);
+			$_ =~ s/\ $//g;
+			my $line=$_;
+			
+			if($sensitive eq "yes")
+			{
+				if($line =~ /($regex)/)
+				{
+				    $foundtotal=1;
+				    $found++;
+				    push (@founded, $line);
+				}               
+			}
+			else
+			{
+				if($line =~ /($regex)/i)
+				{
+				    $foundtotal=1;
+				    $found++;
+				    push (@founded, $line);
+				}
+			}
+		}
+		if($found>0)
+		{
+			#Add buttons to go to the top and to see the file. 
+			push (@location, $loc);
+			print "<tr><td><br /></td></tr><tr>
+				<td valign=\"top\"><a href=\"rancid_search#top\"><img src=\"/rancidsearch/img/up.png\" title=\"Go top\" alt=\"Up\" /></a></td>
+				<td valign=\"top\"><form action=\"watch\" method=\"POST\">
+				<input type=\"image\" src=\"/rancidsearch/img/forward.png\" value=\"See the file\" alt=\"See full config\" title=\"See the file\" border=0 />
+				<input type=\"hidden\" value=\"$file\" name=\"file\" />
+				</form></td>
+				<td valign=\"top\"><b>$loc ($found)</b><a name=\"$loc\"></a><br /><img src=\"/rancidsearch/img/grad_l2r.png\" alt=\"separate\" title=\"Separate\">
+				</td></tr>";
+		    
+			# if don't want to show every duplicated lines, then lauch the function Array_uniq
+			if(!($uniq eq "no"))
+			{
+			    @founded=Array_uniq(@founded);
+			}
+			foreach (@founded)
+			{
+				if($_ =~ /(.*)?($regex)(.*)/)
+				{
+					print "<tr><td></td><td></td><td title=\"$loc\">$1<span class=\"red\">$2</span>$3</td></tr>\n";
+				}
+				else
+				{
+					print "<tr><td></td><td></td><td title=\"$loc\">$_</td></tr>\n";
+				}
+			}
+		}
+	}
+	
+	foreach (@location)
+	{
+		# Create a summary
+		$summary  .= "<tr><td><a href='#$_'>$_</a></td></tr>";
+	}
+	
+	print "\n<tr>";
+	
+	print "<td><br /></td></tr>";
+	print "</table>";
+	
+	#Put the summary at the top of the page
+	print "<script language=\"javascript\">
+		document.getElementById(\'menu\').innerHTML = \"$summary\";
+		</script>";
+}
+
+#If no line has been found, print "No line found" and erase the summary title
+ if($foundtotal==0) 
+{
+	if(!($regex eq ""))
+	{
+		print "<tr><td>No line found</td></tr>";
+	}
+	print "<script language=\"javascript\">document.getElementById(\'sum\').innerHTML = \"   \";</script><br />";
+}
+
+print "</div>";
+# Focus on the first text input field on the page
+print "<script language=\"javascript\">\$(function(){\$(\":input[@type='text']:first\").focus()})</script><br />";
+
+print"</BODY>";

@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+# Rancid Search
+# Made by Charles Henri Turpin and Pierre Mavro
+# Licence GPLv2
+
+# Load libs
+use File::Glob;
+
+
+read(STDIN, $in, $ENV{CONTENT_LENGTH});
+
+print("Content-Type: text/html\n\n");
+print "<head><title>Rancid Search</title></head>\n
+<body>";
+
+my $file;
+
+if($in =~ /file=(.*)/)
+{
+    $file=$1;
+}
+
+$file =~ s/%2F/\//g;
+
+open(FILE, "<$file");
+
+while(<FILE>)
+{
+    chomp($_);
+    print "$_<br />";
+}
+
+close(FILE);
+
+
+print "</body>";
