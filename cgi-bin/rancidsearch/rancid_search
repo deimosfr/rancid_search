@@ -240,36 +240,35 @@ print <<"HEREDOC";
 	<table width=\"100%\" border=0>
 	<label for=\"rancidsearch\">Search</label>
 	<tr><td width=\"20%\"></td>
-	<td align=\"right\"><input class=\"linkbutton\" type=\"submit\" value=\"Search\" style=\"background: #000000\" /></td><td width=\"33%\" align=\"center\"><INPUT TYPE=\"text\" NAME=\"search\" VALUE=\"$regex\" id=\"rancidsearch\" class=\"deletable\" /></td>
-	<script language="javascript">
-		document.getElementById('rancidsearch').focus();
-	</script>
 HEREDOC
 
 #To be able to remember the state of the checkboxes
 if(defined($uniq))
 {
-	print "<td><INPUT TYPE=\"checkbox\" VALUE=\"uniq\" NAME=\"uniq\" CHECKED/>  Display duplicated lines<br />"
+	print "<td align=\"right\" width=\"5\">Display duplicated lines  <INPUT TYPE=\"checkbox\" VALUE=\"uniq\" NAME=\"uniq\" CHECKED/><br />"
 }
 else
 {
-	print "<td><INPUT TYPE=\"checkbox\" VALUE=\"uniq\" NAME=\"uniq\" />  Display duplicated lines<br />"
+	print " <td align=\"right\"  width=\"5\">Display duplicated lines  <INPUT TYPE=\"checkbox\" VALUE=\"uniq\" NAME=\"uniq\" /><br />"
 }
 if(defined($sensitive))
 {
-	print "<INPUT TYPE=\"checkbox\" VALUE=\"sensitive\" NAME=\"sensitive\" CHECKED/>  Case Sensitive</td></tr>"
+	print "Case Sensitive  <INPUT TYPE=\"checkbox\" VALUE=\"sensitive\" NAME=\"sensitive\" CHECKED/></td>"
 }
 else
 {
-	print "<INPUT TYPE=\"checkbox\" VALUE=\"sensitive\" NAME=\"sensitive\" />  Case Sensitive</td></tr>"
+	print "Case Sensitive  <INPUT TYPE=\"checkbox\" VALUE=\"sensitive\" NAME=\"sensitive\" /></td>"
 }
 
 print <<"HEREDOC";
+<td align=\"left\" width=\"40%\"><INPUT TYPE=\"text\" NAME=\"search\" VALUE=\"$regex\" id=\"rancidsearch\" class=\"deletable\" /></td><td align=\"left\"><input class=\"linkbutton\" type=\"submit\" value=\"Search\" style=\"background: #000000\" /></td>
+	<script language="javascript">
+		document.getElementById('rancidsearch').focus();
+	</script>
 	<tr><td />
 </table>
 </FORM>
 </center>
-<img src=\"/rancidsearch/img/greenpixel.png\" alt=\"separate\" title=\"Separate\" width=\"100%\" height=\"1px\"/>
 <div id=\"maingroup\">
 <table id=\"sum\"><tr><td>
 <b><a name=\"menu\">Summary</a><br /><img src=\"/rancidsearch/img/grad_l2r.png\" alt=\"separate\" title=\"Separate\" /></b>
